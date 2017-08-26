@@ -17,43 +17,29 @@ namespace SudokuSolver
             GetInput();
             DetermineSquares();
 
-            int[] test = GetRow(2);
-            int[] test2 = GetColumn(1);
-            int[] test3 = GetSquare(0);
 
-            Console.WriteLine("Row 2: ");
-            for (int i = 0; i < test.Length; i++)
+            // The completed grid!! 
+            for (int i = 0; i < gridSize; i++)
             {
-                Console.WriteLine(test[i]);
+                for (int j = 0; j < gridSize; j++)
+                {
+                    Console.Write(grid[i][j].Square + " ");
+                }
+                Console.WriteLine();
             }
-            Console.WriteLine();
 
-            Console.WriteLine("Col 1: ");
-            for (int i = 0; i < test2.Length; i++)
-            {
-                Console.WriteLine(test2[i]);
-            }
-            Console.WriteLine();
+            Console.ReadKey();
 
-            Console.WriteLine("Square 0: ");
-            for (int i = 0; i < test3.Length; i++)
-            {
-                Console.WriteLine(test3[i]);
-            }
-            Console.WriteLine();
 
-            //
-            //            while ( completedCells < gridSize*gridSize)
-            //            {
-            //                
-            //            }
-
-            // todo optimise order of iteration
+            // todo optimise order of iteration --> maintain record of 'areas' that are well-populated somehow??
 
 
             while (completedCells < (gridSize * gridSize))
             {
 
+
+                // TODO::: UTMOST IMPORTANCE
+                // important --> should be called in other locations also? After every update, on every cell --> or only on every dependent cell 
                 for (int i = 0; i < gridSize; i++)
                 {
                     for (int j = 0; j < gridSize; j++)
@@ -63,12 +49,15 @@ namespace SudokuSolver
                 }
 
 
+                //NEXT STEPS: implement http://www.conceptispuzzles.com/index.aspx?uri=puzzle/sudoku/techniques
+
 
                 // 3. Searching for Single Candidates: ROW
+                // "is there a value in any row that is only possible in one location?"
 
                 for (int row = 0; row < gridSize; row++)
                 {
-                   
+
                     for (int value = 1; value <= gridSize; value++)
                     {
                         if (Array.Exists(GetRow(row), element => element == value))
@@ -90,6 +79,7 @@ namespace SudokuSolver
 
 
                 // 3. Searching for Single Candidates: COLUMN
+                // "is there a value in any column that is only possible in one location?"
 
                 for (int col = 0; col < gridSize; col++)
                 {
@@ -114,9 +104,9 @@ namespace SudokuSolver
 
 
 
-
+                // todo: wtf???
                 // METHOD: 5. Searching for missing numbers in rows and columns:
-//
+                // "what "
                 for (int i = 0; i < gridSize; i++)
                 {
                     for (int j = 0; j < gridSize; j++)
@@ -124,6 +114,7 @@ namespace SudokuSolver
                         if (grid[i][j].Options.Count > 1)
                         {
                             Console.WriteLine("Checking [{0},{1}]", i, j);
+                            //////// TODO: Should this be here?????
                             grid[i][j].Options = UpdateCellOptions(i, j, grid[i][j].Square);
                             if (grid[i][j].Options.Count == 1)
                             {
@@ -140,25 +131,21 @@ namespace SudokuSolver
                 }
 
 
+                // METHOD: 2. Scanning in two directions
+                // "where can a 1 go in this box?"
+                for (int i = 0; i < gridSize; i++)
+                {
+                    for (int j = 0; j < gridSize; j++)
+                    {
+                    }
+                }
+
 
 
             }
 
-            //
-            //            int s = 0;
-            //            for (int i = 0; i < gridSize; i++)
-            //            {
-            //                for (int j = 0; j < gridSize; j++)
-            //                {
-            //                    if (grid[i][j].Options.Count > 1)
-            //                    {
-            //                        s = grid[i][j].Square;
-            //                        grid[i][j].Value = CalculateCellValue(i, j, s);
-            //                    }
-            //                }
-            //            }
 
-
+            // The completed grid!! 
             for (int i = 0; i < gridSize; i++)
             {
                 for (int j = 0; j < gridSize; j++)
@@ -167,7 +154,7 @@ namespace SudokuSolver
                 }
                 Console.WriteLine();
             }
-             
+
             Console.WriteLine("DONE");
 
             Console.ReadKey();
@@ -282,7 +269,7 @@ namespace SudokuSolver
             List<int> options = grid[x][y].Options;
             List<int> newOptions = new List<int>();
 
-            // todo very inefficient?
+            // todo very inefficient? --> measure against above other method.... 
             foreach (var item in options)
             {
                 if (Array.Find(row, element => element == item) != 0)
@@ -316,27 +303,27 @@ namespace SudokuSolver
 
         }
 
-        public static bool OnlyOneZero(int[] arr)
-        {
-            int count = 0;
-            for (int i = 0; i < arr.Length; i++)
-            {
-                if (arr[i] == 0)
-                {
-                    count++;
-                }
-                else
-                {
-
-                }
-            }
-
-            if (count == 1)
-            {
-                return true;
-            }
-            return false;
-        }
+//        public static bool OnlyOneZero(int[] arr)
+//        {
+//            int count = 0;
+//            for (int i = 0; i < arr.Length; i++)
+//            {
+//                if (arr[i] == 0)
+//                {
+//                    count++;
+//                }
+//                else
+//                {
+//
+//                }
+//            }
+//
+//            if (count == 1)
+//            {
+//                return true;
+//            }
+//            return false;
+//        }
 
 
         public static void GetInput()
@@ -431,7 +418,7 @@ namespace SudokuSolver
             return square;
         }
 
-
+        // MAGIC CODE : categorise & number each "sqrt(gridSize) x sqrt(gridSize)"-sized square (row-by-row, starting from left)
         public static void DetermineSquares()
         {
             int square = 0;
