@@ -1,156 +1,58 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SudokuSolver
 {
     class Program
     {
-        public static Cell[][] grid;
-        public static int gridSize;
-        public static int completedCells;
-        static void Main(string[] args)
+        public static Grid grid;
+        static void Main()
         {
-            GetInput();
-            DetermineSquares();
+            grid = new InputService().GetInput();
+            // TODO: optimise order of iteration --> maintain record of 'areas' that are well-populated somehow??
 
 
-            // The completed grid!! 
-            for (int i = 0; i < gridSize; i++)
+            while (grid.CompletedCells < (grid.GridSize * grid.GridSize))
             {
-                for (int j = 0; j < gridSize; j++)
-                {
-                    Console.Write(grid[i][j].Square + " ");
-                }
-                Console.WriteLine();
-            }
-
-            Console.ReadKey();
-
-
-            // todo optimise order of iteration --> maintain record of 'areas' that are well-populated somehow??
-
-
-            while (completedCells < (gridSize * gridSize))
-            {
-
-
                 // TODO::: UTMOST IMPORTANCE
                 // important --> should be called in other locations also? After every update, on every cell --> or only on every dependent cell 
-                for (int i = 0; i < gridSize; i++)
+                for (int i = 0; i < grid.GridSize; i++)
                 {
-                    for (int j = 0; j < gridSize; j++)
+                    for (int j = 0; j < grid.GridSize; j++)
                     {
-                        grid[i][j].Options = UpdateCellOptions(i, j, grid[i][j].Square);
+                        Cell c = grid.GetCell(i, j);
+                        if (c.Value != 0)
+                        {
+                            continue;
+                        }
+
+                        c.Options = grid.UpdateCellOptions(i, j, c.Square);
+                        if (c.Options.Count <= 1)
+                        {
+                            grid.GetCell(i, j).Value = c.Options[0];
+                            grid.GetCell(i, j).Options = new List<int>();
+                            grid.CompletedCells++;
+                            Console.WriteLine("Solved a number: [{0},{1}], value = {2}", i, j, c.Value);
+                        }
                     }
                 }
-
-
+                
                 //NEXT STEPS: implement http://www.conceptispuzzles.com/index.aspx?uri=puzzle/sudoku/techniques
 
-
-                // 3. Searching for Single Candidates: ROW
-                // "is there a value in any row that is only possible in one location?"
-
-                for (int row = 0; row < gridSize; row++)
-                {
-
-                    for (int value = 1; value <= gridSize; value++)
-                    {
-                        if (Array.Exists(GetRow(row), element => element == value))
-                        {
-                            continue;
-                        }
-
-                        // TODO: don't do when value already used
-                        int result = CheckRowForValueInOptions(row, value);
-                        if (result != -1)
-                        {
-                            grid[row][result].Value = value;
-                            grid[row][result].Options = new List<int>() { value };
-                            completedCells++;
-                            Console.WriteLine("Solved a number: [{0},{1}], value = {2}", row, result, grid[row][result].Value);
-                        }
-                    }
-                }
-
-
-                // 3. Searching for Single Candidates: COLUMN
-                // "is there a value in any column that is only possible in one location?"
-
-                for (int col = 0; col < gridSize; col++)
-                {
-                    for (int value = 1; value <= gridSize; value++)
-                    {
-                        if (Array.Exists(GetColumn(col), element => element == value))
-                        {
-                            continue;
-                        }
-
-
-                        int result = CheckColForValueInOptions(col, value);
-                        if (result != -1)
-                        {
-                            grid[result][col].Value = value;
-                            grid[result][col].Options = new List<int>() { value };
-                            completedCells++;
-                            Console.WriteLine("Solved a number: [{0},{1}], value = {2}", result, col, grid[result][col].Value);
-                        }
-                    }
-                }
-
-
-
-                // todo: wtf???
-                // METHOD: 5. Searching for missing numbers in rows and columns:
-                // "what "
-                for (int i = 0; i < gridSize; i++)
-                {
-                    for (int j = 0; j < gridSize; j++)
-                    {
-                        if (grid[i][j].Options.Count > 1)
-                        {
-                            Console.WriteLine("Checking [{0},{1}]", i, j);
-                            //////// TODO: Should this be here?????
-                            grid[i][j].Options = UpdateCellOptions(i, j, grid[i][j].Square);
-                            if (grid[i][j].Options.Count == 1)
-                            {
-                                grid[i][j].Value = grid[i][j].Options[0];
-                                completedCells++;
-                                Console.WriteLine("Solved a number: [{0},{1}], value = {2}", i, j, grid[i][j].Value);
-                            }
-                            else
-                            {
-
-                            }
-                        }
-                    }
-                }
-
-
-                // METHOD: 2. Scanning in two directions
-                // "where can a 1 go in this box?"
-                for (int i = 0; i < gridSize; i++)
-                {
-                    for (int j = 0; j < gridSize; j++)
-                    {
-                    }
-                }
-
-
-
+                grid.SearchRowForSingleCandidates();
+                grid.SearchColumnForSingleCandidates();
+                
             }
 
-
+            Console.WriteLine(grid.IsValidSolution());
+            
             // The completed grid!! 
-            for (int i = 0; i < gridSize; i++)
+            for (int i = 0; i < grid.GridSize; i++)
             {
-                for (int j = 0; j < gridSize; j++)
+                for (int j = 0; j < grid.GridSize; j++)
                 {
-                    Console.Write(grid[i][j].Value + " ");
+                    Console.Write(grid.GetCell(i,j).Value + " ");
                 }
                 Console.WriteLine();
             }
@@ -159,314 +61,5 @@ namespace SudokuSolver
 
             Console.ReadKey();
         }
-
-        //        static int CalculateCellValue(int x, int y, int s)
-        //        {
-        //            grid[x][y].Options = UpdateCellOptions(x, y, s);
-        //
-        //            if (grid[x][y].Options.Count == 1)
-        //            {
-        //                completedCells++;
-        //                return grid[x][y].Options[0];
-        // 
-        //            }
-        //          return 0;
-        //        }
-
-
-        static List<int> GetAvailableRowValues()
-        {
-            return null;
-        }
-
-
-        static int CheckRowForValueInOptions(int row, int value)
-        {
-            int count = 0;
-            int index = -1;
-            for (int j = 0; j < gridSize; j++)
-            {
-
-                if (grid[row][j].Options.Contains(value))
-                {
-                    index = j;
-                    count++;
-                }
-            }
-
-            if (count == 1)
-            {
-                return index;
-            }
-
-
-            return -1;
-        }
-
-        static int CheckColForValueInOptions(int col, int value)
-        {
-            int count = 0;
-            int index = -1;
-            for (int i = 0; i < gridSize; i++)
-            {
-
-                if (grid[i][col].Options.Contains(value))
-                {
-                    index = i;
-                    count++;
-                }
-            }
-
-            if (count == 1)
-            {
-                return index;
-            }
-
-
-            return -1;
-        }
-
-
-        static List<int> UpdateCellOptions(int x, int y, int s)
-        {
-
-            int[] row = GetRow(x);
-            int[] col = GetColumn(y);
-            int[] square = GetSquare(s);
-
-            //            if (OnlyOneZero(row))
-            //            {
-            //                return 
-            //            }
-
-            //            Stopwatch stopWatch = new Stopwatch();
-            //            stopWatch.Start();
-
-            List<int> possibleRowValues = Enumerable.Range(1, 9).Except(row).ToList();
-            List<int> possibleColValues = Enumerable.Range(1, 9).Except(col).ToList();
-            List<int> possibleSquareValues = Enumerable.Range(1, 9).Except(square).ToList();
-
-            var test = possibleRowValues.Intersect(possibleColValues).Intersect(possibleSquareValues).ToList();
-
-
-            //  return test;
-
-
-            //            TimeSpan ts = stopWatch.Elapsed;
-            //
-            //            string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
-            //            ts.Hours, ts.Minutes, ts.Seconds,
-            //            ts.Milliseconds / 10);
-            //            Console.WriteLine("RunTime " + elapsedTime);
-
-            //            stopWatch = new Stopwatch();
-            //            stopWatch.Start();
-
-
-
-            // searching for single candidates
-
-            List<int> options = grid[x][y].Options;
-            List<int> newOptions = new List<int>();
-
-            // todo very inefficient? --> measure against above other method.... 
-            foreach (var item in options)
-            {
-                if (Array.Find(row, element => element == item) != 0)
-                {
-                    //Console.WriteLine("found something in row");
-                    continue;
-                }
-                else if (Array.Find(col, element => element == item) != 0)
-                {
-                    // Console.WriteLine("found something in col");
-                    continue;
-                }
-                else if (Array.Find(square, element => element == item) != 0)
-                {
-                    //  Console.WriteLine("found something in sq");
-                    continue;
-                }
-                newOptions.Add(item);
-            }
-
-
-            //            ts = stopWatch.Elapsed;
-            //
-            //            elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
-            //            ts.Hours, ts.Minutes, ts.Seconds,
-            //            ts.Milliseconds / 10);
-            //            Console.WriteLine("RunTime " + elapsedTime);
-
-
-            return newOptions;
-
-        }
-
-//        public static bool OnlyOneZero(int[] arr)
-//        {
-//            int count = 0;
-//            for (int i = 0; i < arr.Length; i++)
-//            {
-//                if (arr[i] == 0)
-//                {
-//                    count++;
-//                }
-//                else
-//                {
-//
-//                }
-//            }
-//
-//            if (count == 1)
-//            {
-//                return true;
-//            }
-//            return false;
-//        }
-
-
-        public static void GetInput()
-        {
-            Console.WriteLine("Enter grid size:");
-            // todo: validate square number
-            gridSize = int.Parse(Console.ReadLine());
-
-            grid = new Cell[gridSize][];
-            //    bool[][] blanks = new bool[gridSize][];
-
-            //    int[,] numberOptions = new int[gridSize, gridSize];
-            //  Populate(numberOptions, gridSize);
-            completedCells = 0;
-
-            int[] tempRow;
-
-            Console.WriteLine("Enter grid one row at a time (space-separated, 0 for blank):");
-            for (int i = 0; i < gridSize; i++)
-            {
-
-                grid[i] = new Cell[gridSize];
-                // todo test for whitespace issues
-                tempRow = Console.ReadLine().Split(' ').Select(int.Parse).ToArray();
-
-
-                for (int j = 0; j < gridSize; j++)
-                {
-
-                    Console.WriteLine("test, {0}", j);
-
-                    grid[i][j] = new Cell(i, j, tempRow[j]);
-
-
-                    if (tempRow[j] != 0)
-                    {
-                        grid[i][j].Options = new List<int>() { tempRow[j] };
-                        //       numberOptions[i, j] = 1;
-                        completedCells++;
-                    }
-                    else
-                    {
-                        grid[i][j].Options = Enumerable.Range(1, gridSize).ToList();
-                    }
-                }
-
-                Console.WriteLine("test, finished row {0}", i);
-
-            }
-            Console.WriteLine("test, finished all rows");
-
-
-        }
-
-        public static int[] GetRow(int r)
-        {
-            int[] row = new int[gridSize];
-            for (int i = 0; i < gridSize; i++)
-            {
-                row[i] = grid[r][i].Value;
-            }
-            return row;
-
-        }
-        public static int[] GetColumn(int c)
-        {
-            int[] col = new int[gridSize];
-            for (int i = 0; i < gridSize; i++)
-            {
-                col[i] = grid[i][c].Value;
-            }
-            return col;
-        }
-
-        public static int[] GetSquare(int s)
-        {
-            int[] square = new int[gridSize];
-            int count = 0;
-
-            for (int i = 0; i < gridSize; i++)
-            {
-                for (int j = 0; j < gridSize; j++)
-                {
-                    if (grid[i][j].Square == s)
-                    {
-                        square[count] = grid[i][j].Value;
-                        count++;
-                    }
-                }
-            }
-
-            return square;
-        }
-
-        // MAGIC CODE : categorise & number each "sqrt(gridSize) x sqrt(gridSize)"-sized square (row-by-row, starting from left)
-        public static void DetermineSquares()
-        {
-            int square = 0;
-
-            int countA = 0;
-            int countB = 0;
-
-            int squareSize = (int)Math.Sqrt(gridSize);
-
-            for (int i = 0; i < gridSize; i++)
-            {
-                for (int j = 0; j < gridSize; j++)
-                {
-                    // Console.WriteLine("Count A {0}, Count B {1}, Square {2}", countA, countB, square);
-
-                    grid[i][j].Square = square;
-
-                    countA++;
-
-                    if (countA % squareSize == 0 && countA % gridSize != 0)
-                    {
-                        square++;
-                    }
-
-                }
-                countB++;
-
-                if (countB % squareSize != 0)
-                {
-                    square = square - squareSize + 1;
-                }
-                else
-                {
-                    square++;
-                }
-            }
-        }
-
-        public static void Populate<T>(T[,] arr, T value)
-        {
-            for (int i = 0; i < arr.GetLength(0); i++)
-            {
-                for (int j = 0; j < arr.GetLength(1); j++)
-                {
-                    arr[i, j] = value;
-                }
-            }
-        }
-
     }
 }

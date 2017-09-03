@@ -1,20 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace SudokuSolver
 {
-    class Cell
+    public class Cell
     {
-        public Cell(int X, int Y, int Value)
+        public Cell(int x, int y, int value)
         {
-            this.X = X;
-            this.Y = Y;
-          //  this.Square = CalculateSquare();
-            this.Value = Value;
+            X = x;
+            Y = y;
+            Value = value;
         }
 
         public int X { get; set; }
@@ -22,16 +16,5 @@ namespace SudokuSolver
         public int Square { get; set; }
         public int Value { get; set; }
         public List<int> Options { get; set; }
-
-
-        private int CalculateSquare()
-        {
-
-
-            return 0;
-        }
-
-
-
     }
 }
