@@ -59,6 +59,25 @@
             return square;
         }
 
+        public Cell[] GetSquareCells(int squareIndex)
+        {
+            Cell[] square = new Cell[GridSize];
+            int count = 0;
+
+            for (int i = 0; i < GridSize; i++)
+            {
+                for (int j = 0; j < GridSize; j++)
+                {
+                    if (_grid[i][j].Square == squareIndex)
+                    {
+                        square[count] = _grid[i][j];
+                        count++;
+                    }
+                }
+            }
+
+            return square;
+        }
 
         public int CheckRowForValueInOptions(int row, int value)
         {

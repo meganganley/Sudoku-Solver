@@ -19,7 +19,7 @@ namespace SudokuSolver
             return possibleRowValues.Intersect(possibleColValues).Intersect(possibleSquareValues).ToList();
         }
 
-        // TODO: Fuck me
+
         // 3. Searching for Single Candidates: COLUMN
         // "is there a value in any column that is only possible in one location?"
 
@@ -39,26 +39,21 @@ namespace SudokuSolver
                     int result = grid.CheckColForValueInOptions(col, value);
                     if (result != -1)
                     {
-                        grid.GetCell(result, col).Value = value;
-                        grid.GetCell(result, col).Options = new List<int>();
-                        grid.CompletedCells++;
-                        Console.WriteLine("Solved a number: [{0},{1}], value = {2}", result, col,
-                            grid.GetCell(result, col).Value);
+                        grid.SolveCell(result, col);
+                        grid.UpdateNeighbours(result, col);
                     }
                 }
             }
         }
 
-
+        // TODO: rename - doesnt make sense. Should be single responsibility
         public static void SearchRowForSingleCandidates(this Grid grid)
         {
-
             // 3. Searching for Single Candidates: ROW
             // "is there a value in any row that is only possible in one location?" 
 
             for (int row = 0; row < grid.GridSize; row++)
             {
-
                 for (int value = 1; value <= grid.GridSize; value++)
                 {
                     // that value already exists in the row
@@ -71,47 +66,80 @@ namespace SudokuSolver
                     int result = grid.CheckRowForValueInOptions(row, value);
                     if (result != -1)
                     {
-                        grid.GetCell(row, result).Value = value;
-                        grid.GetCell(row, result).Options = new List<int>();
-                        grid.CompletedCells++;
-                        Console.WriteLine("Solved a number: [{0},{1}], value = {2}", row, result,
-                            grid.GetCell(row, result).Value);
+                        grid.SolveCell(row, result);
+                        grid.UpdateNeighbours(row, result);
                     }
                 }
             }
         }
+                
+        public static void UpdateNeighbours(this Grid grid, int x, int y)
+        {
+            grid.UpdateRowNeighbours(x);
+            grid.UpdateColumnNeighbours(y);
+            grid.UpdateSquareNeighbours(grid.GetCell(x,y).Square);
+        }
 
+        public static void UpdateRowNeighbours(this Grid grid, int x)
+        {
+            for (int i = 0; i < grid.GridSize; i++)
+            {
+                if(grid.GetCell(x, i).Value != 0)
+                {
+                    continue;
+                }
 
-        //        public static void MissingValue(this Grid grid)
-        //        {
-        //            // todo: wtf???
-        //            // METHOD: 5. Searching for missing numbers in rows and columns:
-        //            // "what "
-        //            for (int i = 0; i < grid.GridSize; i++)
-        //            {
-        //                for (int j = 0; j < grid.GridSize; j++)
-        //                {
-        //                    Cell temp = grid.GetCell(i, j);
-        //                    if (temp.Options.Count > 1)
-        //                    {
-        //                        Console.WriteLine("Checking [{0},{1}]", i, j);
-        //                        //////// TODO: Should this be here?????
-        //                        temp.Options = grid.UpdateCellOptions(i, j, temp.Square);
-        //                        if (temp.Options.Count == 1)
-        //                        {
-        //                            temp.Value = temp.Options[0];
-        //                            grid.CompletedCells++;
-        //                            Console.WriteLine("Solved a number: [{0},{1}], value = {2}", i, j, temp.Value);
-        //                        }
-        //                        else
-        //                        {
-        //
-        //                        }
-        //                    }
-        //                }
-        //            }
-        //  }
-        
+                grid.GetCell(x, i).Options = grid.UpdateCellOptions(x, i, grid.GetCell(x, i).Square);
+                if (grid.GetCell(x, i).Options.Count == 1)
+                {
+                    grid.SolveCell(x, i);
+                    grid.UpdateNeighbours(x, i);
+                }
+            }
+        }
+
+        public static void UpdateColumnNeighbours(this Grid grid, int y)
+        {
+            for (int i = 0; i < grid.GridSize; i++)
+            {
+                if (grid.GetCell(i, y).Value != 0)
+                {
+                    continue;
+                }
+                grid.GetCell(i, y).Options = grid.UpdateCellOptions(i, y, grid.GetCell(i, y).Square);
+                if (grid.GetCell(i, y).Options.Count == 1)
+                {
+                    grid.SolveCell(i, y);
+                    grid.UpdateNeighbours(i, y);
+                }
+            }
+        }
+
+        public static void UpdateSquareNeighbours(this Grid grid, int s)
+        {
+            Cell[] square = grid.GetSquareCells(s);
+            for (int i = 0; i < grid.GridSize; i++)
+            {
+                if (grid.GetCell(square[i].X, square[i].Y).Value != 0)
+                {
+                    continue;
+                }
+                grid.GetCell(square[i].X, square[i].Y).Options = grid.UpdateCellOptions(square[i].X, square[i].Y, s);
+                if (grid.GetCell(square[i].X, square[i].Y).Options.Count == 1)
+                {
+                    grid.SolveCell(square[i].X, square[i].Y);
+                    grid.UpdateNeighbours(square[i].X, square[i].Y);
+                }
+            }
+        }
+
+        public static void SolveCell(this Grid grid, int x, int y)
+        {
+            grid.GetCell(x, y).Value = grid.GetCell(x, y).Options[0];
+            grid.GetCell(x, y).Options.Clear();
+            grid.CompletedCells++;
+        }
+
 
         public static bool IsValidSolution(this Grid grid)
         {
