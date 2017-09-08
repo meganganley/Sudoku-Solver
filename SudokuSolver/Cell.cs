@@ -16,5 +16,6 @@ namespace SudokuSolver
         public int Square { get; set; }
         public int Value { get; set; }
         public List<int> Options { get; set; }
+        // TODO: make solved bool
     }
 }

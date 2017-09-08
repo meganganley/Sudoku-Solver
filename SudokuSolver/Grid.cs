@@ -85,6 +85,11 @@
             int index = -1;
             for (int j = 0; j < GridSize; j++)
             {
+                if (_grid[row][j].Value != 0)
+                {
+                    continue;
+                }
+
                 if (_grid[row][j].Options.Contains(value))
                 {
                     index = j;

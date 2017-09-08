@@ -39,7 +39,7 @@ namespace SudokuSolver
                     int result = grid.CheckColForValueInOptions(col, value);
                     if (result != -1)
                     {
-                        grid.SolveCell(result, col);
+                        grid.SolveCell(result, col, value);
                         grid.UpdateNeighbours(result, col);
                     }
                 }
@@ -66,7 +66,7 @@ namespace SudokuSolver
                     int result = grid.CheckRowForValueInOptions(row, value);
                     if (result != -1)
                     {
-                        grid.SolveCell(row, result);
+                        grid.SolveCell(row, result, value);
                         grid.UpdateNeighbours(row, result);
                     }
                 }
@@ -82,6 +82,7 @@ namespace SudokuSolver
 
         public static void UpdateRowNeighbours(this Grid grid, int x)
         {
+            Console.WriteLine("update row  {0}", x );
             for (int i = 0; i < grid.GridSize; i++)
             {
                 if(grid.GetCell(x, i).Value != 0)
@@ -92,7 +93,7 @@ namespace SudokuSolver
                 grid.GetCell(x, i).Options = grid.UpdateCellOptions(x, i, grid.GetCell(x, i).Square);
                 if (grid.GetCell(x, i).Options.Count == 1)
                 {
-                    grid.SolveCell(x, i);
+                    grid.SolveCell(x, i, grid.GetCell(x, i).Options[0]);
                     grid.UpdateNeighbours(x, i);
                 }
             }
@@ -100,6 +101,7 @@ namespace SudokuSolver
 
         public static void UpdateColumnNeighbours(this Grid grid, int y)
         {
+            Console.WriteLine("update column {0}", y);
             for (int i = 0; i < grid.GridSize; i++)
             {
                 if (grid.GetCell(i, y).Value != 0)
@@ -109,7 +111,7 @@ namespace SudokuSolver
                 grid.GetCell(i, y).Options = grid.UpdateCellOptions(i, y, grid.GetCell(i, y).Square);
                 if (grid.GetCell(i, y).Options.Count == 1)
                 {
-                    grid.SolveCell(i, y);
+                    grid.SolveCell(i, y, grid.GetCell(i, y).Options[0]);
                     grid.UpdateNeighbours(i, y);
                 }
             }
@@ -117,6 +119,7 @@ namespace SudokuSolver
 
         public static void UpdateSquareNeighbours(this Grid grid, int s)
         {
+            Console.WriteLine("update square {0}", s);
             Cell[] square = grid.GetSquareCells(s);
             for (int i = 0; i < grid.GridSize; i++)
             {
@@ -127,15 +130,16 @@ namespace SudokuSolver
                 grid.GetCell(square[i].X, square[i].Y).Options = grid.UpdateCellOptions(square[i].X, square[i].Y, s);
                 if (grid.GetCell(square[i].X, square[i].Y).Options.Count == 1)
                 {
-                    grid.SolveCell(square[i].X, square[i].Y);
+                    grid.SolveCell(square[i].X, square[i].Y, grid.GetCell(square[i].X, square[i].Y).Options[0]);
                     grid.UpdateNeighbours(square[i].X, square[i].Y);
                 }
             }
         }
 
-        public static void SolveCell(this Grid grid, int x, int y)
+        public static void SolveCell(this Grid grid, int x, int y, int value)
         {
-            grid.GetCell(x, y).Value = grid.GetCell(x, y).Options[0];
+            Console.WriteLine("solved cell [{0}, {1}]", x, y );
+            grid.GetCell(x, y).Value = value;
             grid.GetCell(x, y).Options.Clear();
             grid.CompletedCells++;
         }
