@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
+using System.Security.Principal;
 
 namespace SudokuSolver
 {
@@ -19,9 +21,50 @@ namespace SudokuSolver
             return possibleRowValues.Intersect(possibleColValues).Intersect(possibleSquareValues).ToList();
         }
 
+        public static void SearchForLockedCandidates()
+        {
+            
+        }
 
-        // 3. Searching for Single Candidates: COLUMN
-        // "is there a value in any column that is only possible in one location?"
+
+        // 3. Searching for Single Candidates: Square
+        // "is there a value in any square that is only possible in one location?"
+
+        public static void SearchSquareForSingleCandidates(this Grid grid)
+        {
+            for (int s = 0; s < grid.GridSize; s++)
+            {
+                for (int value = 1; value <= grid.GridSize; value++)
+                {
+                    // that value already exists in the col
+                    if (Array.Exists(grid.GetSquare(s), element => element == value))
+                    {
+                        continue;
+                    }
+
+                    Tuple<int, int> result = grid.CheckSquareForValueInOptions(s, value);
+                    if (result.Item1 != -1 && result.Item2 != -1)
+                    {
+                        grid.SolveCell(result.Item1, result.Item2, value);
+                        grid.UpdateNeighbours(result.Item1, result.Item2);
+                    }
+                }
+            }
+        }
+
+        public static void CheckCellForSingleOption(this Grid grid, int x, int y)
+        {
+            if (grid.GetCell(x, y).Solved)
+            {
+                return;
+            }
+
+            if (grid.GetCell(x, y).Options.Count == 1)
+            {
+                grid.SolveCell(x, y, grid.GetCell(x, y).Options[0]);
+                grid.UpdateNeighbours(x, y);
+            }
+        }
 
         public static void SearchColumnForSingleCandidates(this Grid grid)
         {
@@ -35,7 +78,6 @@ namespace SudokuSolver
                         continue;
                     }
 
-                    // TODO: don't do when value already used
                     int result = grid.CheckColForValueInOptions(col, value);
                     if (result != -1)
                     {
@@ -45,7 +87,6 @@ namespace SudokuSolver
                 }
             }
         }
-
         // TODO: rename - doesnt make sense. Should be single responsibility
         public static void SearchRowForSingleCandidates(this Grid grid)
         {
@@ -62,7 +103,6 @@ namespace SudokuSolver
                         continue;
                     }
 
-                    // TODO: don't do when value already used
                     int result = grid.CheckRowForValueInOptions(row, value);
                     if (result != -1)
                     {
@@ -72,30 +112,27 @@ namespace SudokuSolver
                 }
             }
         }
-                
+
         public static void UpdateNeighbours(this Grid grid, int x, int y)
         {
             grid.UpdateRowNeighbours(x);
             grid.UpdateColumnNeighbours(y);
-            grid.UpdateSquareNeighbours(grid.GetCell(x,y).Square);
+            grid.UpdateSquareNeighbours(grid.GetCell(x, y).Square);
         }
 
         public static void UpdateRowNeighbours(this Grid grid, int x)
         {
-            Console.WriteLine("update row  {0}", x );
+            Console.WriteLine("update row  {0}", x);
             for (int i = 0; i < grid.GridSize; i++)
             {
-                if(grid.GetCell(x, i).Value != 0)
+                if (grid.GetCell(x, i).Solved)
                 {
                     continue;
                 }
 
                 grid.GetCell(x, i).Options = grid.UpdateCellOptions(x, i, grid.GetCell(x, i).Square);
-                if (grid.GetCell(x, i).Options.Count == 1)
-                {
-                    grid.SolveCell(x, i, grid.GetCell(x, i).Options[0]);
-                    grid.UpdateNeighbours(x, i);
-                }
+
+                grid.CheckCellForSingleOption(x, i);
             }
         }
 
@@ -104,16 +141,12 @@ namespace SudokuSolver
             Console.WriteLine("update column {0}", y);
             for (int i = 0; i < grid.GridSize; i++)
             {
-                if (grid.GetCell(i, y).Value != 0)
+                if (grid.GetCell(i, y).Solved)
                 {
                     continue;
                 }
                 grid.GetCell(i, y).Options = grid.UpdateCellOptions(i, y, grid.GetCell(i, y).Square);
-                if (grid.GetCell(i, y).Options.Count == 1)
-                {
-                    grid.SolveCell(i, y, grid.GetCell(i, y).Options[0]);
-                    grid.UpdateNeighbours(i, y);
-                }
+                grid.CheckCellForSingleOption(i, y);
             }
         }
 
@@ -123,22 +156,19 @@ namespace SudokuSolver
             Cell[] square = grid.GetSquareCells(s);
             for (int i = 0; i < grid.GridSize; i++)
             {
-                if (grid.GetCell(square[i].X, square[i].Y).Value != 0)
+                if (grid.GetCell(square[i].X, square[i].Y).Solved)
                 {
                     continue;
                 }
                 grid.GetCell(square[i].X, square[i].Y).Options = grid.UpdateCellOptions(square[i].X, square[i].Y, s);
-                if (grid.GetCell(square[i].X, square[i].Y).Options.Count == 1)
-                {
-                    grid.SolveCell(square[i].X, square[i].Y, grid.GetCell(square[i].X, square[i].Y).Options[0]);
-                    grid.UpdateNeighbours(square[i].X, square[i].Y);
-                }
+                grid.CheckCellForSingleOption(square[i].X, square[i].Y);
             }
         }
 
         public static void SolveCell(this Grid grid, int x, int y, int value)
         {
-            Console.WriteLine("solved cell [{0}, {1}]", x, y );
+            Console.WriteLine("solved cell [{0}, {1}]", x, y);
+            grid.GetCell(x, y).Solved = true;
             grid.GetCell(x, y).Value = value;
             grid.GetCell(x, y).Options.Clear();
             grid.CompletedCells++;

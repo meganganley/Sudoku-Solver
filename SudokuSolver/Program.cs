@@ -59,6 +59,18 @@ namespace SudokuSolver
 
                 grid.SearchRowForSingleCandidates();
                 grid.SearchColumnForSingleCandidates();
+                grid.SearchSquareForSingleCandidates();
+                
+
+//                for (int i = 0; i < grid.GridSize; i++)
+//                {
+//                    for (int j = 0; j < grid.GridSize; j++)
+//                    {
+//                        Console.Write(grid.GetCell(i, j).Value + " ");
+//                    }
+//                    Console.WriteLine();
+//                }
+//                Console.WriteLine();
 
             }
 

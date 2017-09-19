@@ -1,4 +1,6 @@
-﻿namespace SudokuSolver
+﻿using System;
+
+namespace SudokuSolver
 {
     public class Grid
     {
@@ -81,6 +83,7 @@
 
         public int CheckRowForValueInOptions(int row, int value)
         {
+            
             int count = 0;
             int index = -1;
             for (int j = 0; j < GridSize; j++)
@@ -103,6 +106,35 @@
             }
 
             return -1;
+        }
+
+        public Tuple<int, int> CheckSquareForValueInOptions(int s, int value)
+        {
+            Cell[] square = GetSquareCells(s);
+            int count = 0;
+            int indexX = -1;
+            int indexY = -1;
+            for (int j = 0; j < GridSize; j++)
+            {
+                if (square[j].Value != 0)
+                {
+                    continue;
+                }
+
+                if (square[j].Options.Contains(value))
+                {
+                    indexX = square[j].X;
+                    indexY = square[j].Y;
+                    count++;
+                }
+            }
+
+            if (count == 1)
+            {
+                return new Tuple<int, int> (indexX, indexY );
+            }
+
+            return new Tuple<int, int>(-1, -1);
         }
 
         public int CheckColForValueInOptions(int col, int value)

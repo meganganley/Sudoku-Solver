@@ -36,6 +36,7 @@ namespace SudokuSolver
                     if (tempRow[j] != 0)
                     {
                         grid[i][j].Options = new List<int>();
+                        grid[i][j].Solved = true;
                         completedCells++;
                     }
                     else
